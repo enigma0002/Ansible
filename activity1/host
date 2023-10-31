@@ -1,0 +1,10 @@
+# download tomcat tar to /tmp
+# file path: /tmp/apache-tomcat-10.1.14.tar.gz
+sudo tar -xf /tmp/apache-tomcat-${VERSION}.tar.gz -C /opt/tomcat/
+# extract tar file to /opt/tomcat
+sudo ln -s /opt/tomcat/apache-tomcat-${VERSION} /opt/tomcat/latest
+# Create a link for /opt/tomcat/apache-tomcat-10.1.14 to /opt/tomcat/latest
+sudo chown -R tomcat: /opt/tomcat
+# transfer of ownership to tomcat user
+sudo sh -c 'chmod +x /opt/tomcat/latest/bin/*.sh'
+# Add execute permissions to all scripts in bin directory
