@@ -105,9 +105,9 @@
         name: tomcat
         state: started
 
-  handlers:
+ handlers:
     - name: restart tomcat
-      ansible.builtin.systemd:
+      ansible.builtin.systemd_service:
         name: tomcat
         daemon_reload: true
         enable: true
