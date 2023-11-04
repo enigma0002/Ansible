@@ -27,16 +27,11 @@
     - name: Reload Systemd
       shell: systemctl daemon-reload
 
-    - name: Install MySQL Module for Python 2.7
-      pip:
-        name: pymysql
-      when: python_version.stdout == "2"
-
-    - name: Install MySQL Module for Python 3.x
-      pip:
-        name: mysqlclient
-      when: python_version.stdout == "3"
-      
+    - name: "Install ansible python3 mysql dependency"
+      apt:
+        name: python3-mysqldb
+        state: latest    
+    
     - name: Restart MySQL Service
       service:
         name: mysql
