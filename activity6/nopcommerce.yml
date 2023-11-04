@@ -1,38 +1,40 @@
 ---
 - name: Setup nopCommerce
-  hosts: nopserver # Replace with your target host(s)
-  become: yes
+  hosts: nopserver  # Replace with your target host or group
+  become: yes  # Become a superuser for privileged tasks
 
   tasks:
-    - name: Update Ubuntu packages
+    - name: Update APT package cache
       apt:
         update_cache: yes
 
+    - name: Install prerequisites
+      apt:
+        name:
+          - unzip
+          - apt-transport-https
+          - aspnetcore-runtime-7.0
+        state: present
+        update_cache: yes
+
     - name: Download and extract nopCommerce
+      become_user: your_username  # Replace with your username
       shell: |
-        cd /tmp
-        wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-        sudo dpkg -i packages-microsoft-prod.deb
-        sudo apt-get update
-        sudo apt-get install -y apt-transport-https aspnetcore-runtime-7.0
-        dotnet --list-runtimes
-        sudo apt install unzip -y
-        sudo mkdir /var/nopCommerce
         cd /var/nopCommerce
-        sudo wget https://github.com/nopSolutions/nopCommerce/releases/download/release-4.60.4/nopCommerce_4.60.4_NoSource_linux_x64.zip
-        sudo unzip nopCommerce_4.60.4_NoSource_linux_x64.zip
-        sudo mkdir bin logs
+        wget https://github.com/nopSolutions/nopCommerce/releases/download/release-4.60.4/nopCommerce_4.60.4_NoSource_linux_x64.zip
+        unzip nopCommerce_4.60.4_NoSource_linux_x64.zip
+        mkdir bin logs
 
-    - name: Run nopCommerce
-      shell: sudo dotnet /var/nopCommerce/Nop.Web.dll --urls "http://0.0.0.0:5000"
-      async: 0
-      poll: 0
+    - name: Create nop user
+      user:
+        name: nop
+        state: present
 
-    - name: Grant full permissions to devops user on /var/nopCommerce
+    - name: Grant full permissions to nop user on /var/nopCommerce
       file:
         path: /var/nopCommerce
-        owner: devops
-        group: devops
+        owner: nop
+        group: nop
         recurse: yes
 
     - name: Create nopCommerce systemd service
@@ -40,7 +42,7 @@
         dest: /etc/systemd/system/nopCommerce.service
         content: |
           [Unit]
-          Description=Example nopCommerce app running on Xubuntu
+          Description=Example nopCommerce app running on Ubuntu
 
           [Service]
           WorkingDirectory=/var/nopCommerce
@@ -49,7 +51,7 @@
           RestartSec=10
           KillSignal=SIGINT
           SyslogIdentifier=nopCommerce-example
-          User=devops
+          User=nop
           Environment=ASPNETCORE_ENVIRONMENT=Production
           Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
 
@@ -61,9 +63,3 @@
         name: nopCommerce
         enabled: yes
         state: started
-
-  handlers:
-    - name: Restart SSH
-      service:
-        name: ssh
-        state: restarted
