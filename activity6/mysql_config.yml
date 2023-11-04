@@ -45,8 +45,9 @@
         priv: "*.*:ALL,GRANT"
 
     - name: Flush MySQL Privileges
-      mysql_db:
+      mysql_user:
+        name: flush_privileges
         login_user: nop
         login_password: nop12345
-        name: "*.*"
-        state: flush_privileges
+        state: query
+        query: FLUSH PRIVILEGES
