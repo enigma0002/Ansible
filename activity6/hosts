@@ -1,5 +1,5 @@
-[nopserver]
+[dbserver]
 172.31.17.202
 
-[dbserver]
+[nopserver]
 172.31.29.95
