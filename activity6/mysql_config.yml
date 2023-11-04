@@ -1,0 +1,49 @@
+---
+- name: Configure MySQL Server
+  hosts: nopserver
+  become: yes
+  tasks:
+    - name: Update APT package cache
+      apt:
+        update_cache: yes
+
+    - name: Install MySQL Server
+      apt:
+        name: mysql-server
+        state: present
+        update_cache: yes
+
+    - name: Start MySQL Service
+      service:
+        name: mysql
+        state: started
+
+    - name: Update MySQL Configuration
+      replace:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: "^(bind-address|mysqlx-bind-address)\\s*=\\s*127.0.0.1$"
+        replace: "\\1 = 0.0.0.0"
+
+    - name: Reload Systemd
+      systemd:
+        state: reloaded
+        daemon_reload: yes
+
+    - name: Restart MySQL Service
+      service:
+        name: mysql
+        state: restarted
+
+    - name: Create MySQL User
+      mysql_user:
+        name: nop
+        host: "%"
+        password: nop12345
+        priv: "*.*:ALL,GRANT"
+
+    - name: Flush MySQL Privileges
+      mysql_db:
+        login_user: devops
+        login_password: devops
+        name: "*.*"
+        state: flush_privileges
