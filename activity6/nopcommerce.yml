@@ -8,51 +8,25 @@
       apt:
         update_cache: yes
 
-    - name: Create devops user
-      user:
-        name: devops
-        state: present
-
-    - name: Enable Password Authentication in SSH
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^PasswordAuthentication'
-        line: 'PasswordAuthentication yes'
-      notify: Restart SSH
-
-    - name: Add devops to sudo group
-      user:
-        name: devops
-        groups: sudo
-        append: yes
-
-    - name: Switch to devops user
-      become_user: devops
-      shell: sudo apt update
-
-    - name: Install prerequisites
-      apt:
-        name: 
-          - unzip
-          - apt-transport-https
-          - aspnetcore-runtime-7.0
-
     - name: Download and extract nopCommerce
       shell: |
+        cd /tmp
+        wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y apt-transport-https aspnetcore-runtime-7.0
+        dotnet --list-runtimes
+        sudo apt install unzip -y
+        sudo mkdir /var/nopCommerce
         cd /var/nopCommerce
-        wget https://github.com/nopSolutions/nopCommerce/releases/download/release-4.60.4/nopCommerce_4.60.4_NoSource_linux_x64.zip
-        unzip nopCommerce_4.60.4_NoSource_linux_x64.zip
-        mkdir bin logs
+        sudo wget https://github.com/nopSolutions/nopCommerce/releases/download/release-4.60.4/nopCommerce_4.60.4_NoSource_linux_x64.zip
+        sudo unzip nopCommerce_4.60.4_NoSource_linux_x64.zip
+        sudo mkdir bin logs
 
     - name: Run nopCommerce
       shell: sudo dotnet /var/nopCommerce/Nop.Web.dll --urls "http://0.0.0.0:5000"
       async: 0
       poll: 0
-
-    - name: Create devops user and set folder permissions
-      user:
-        name: devops
-        state: present
 
     - name: Grant full permissions to devops user on /var/nopCommerce
       file:
