@@ -18,7 +18,8 @@
         update_cache: yes
 
     - name: Download and extract nopCommerce
-      become_user: your_username  # Replace with your username
+      become: no
+      become_user: devops
       shell: |
         cd /var/nopCommerce
         wget https://github.com/nopSolutions/nopCommerce/releases/download/release-4.60.4/nopCommerce_4.60.4_NoSource_linux_x64.zip
