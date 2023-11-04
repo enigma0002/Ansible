@@ -1,0 +1,95 @@
+---
+- name: Setup nopCommerce
+  hosts: nopserver # Replace with your target host(s)
+  become: yes
+
+  tasks:
+    - name: Update Ubuntu packages
+      apt:
+        update_cache: yes
+
+    - name: Create devops user
+      user:
+        name: devops
+        state: present
+
+    - name: Enable Password Authentication in SSH
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+      notify: Restart SSH
+
+    - name: Add devops to sudo group
+      user:
+        name: devops
+        groups: sudo
+        append: yes
+
+    - name: Switch to devops user
+      become_user: devops
+      shell: sudo apt update
+
+    - name: Install prerequisites
+      apt:
+        name: 
+          - unzip
+          - apt-transport-https
+          - aspnetcore-runtime-7.0
+
+    - name: Download and extract nopCommerce
+      shell: |
+        cd /var/nopCommerce
+        wget https://github.com/nopSolutions/nopCommerce/releases/download/release-4.60.4/nopCommerce_4.60.4_NoSource_linux_x64.zip
+        unzip nopCommerce_4.60.4_NoSource_linux_x64.zip
+        mkdir bin logs
+
+    - name: Run nopCommerce
+      shell: sudo dotnet /var/nopCommerce/Nop.Web.dll --urls "http://0.0.0.0:5000"
+      async: 0
+      poll: 0
+
+    - name: Create devops user and set folder permissions
+      user:
+        name: devops
+        state: present
+
+    - name: Grant full permissions to devops user on /var/nopCommerce
+      file:
+        path: /var/nopCommerce
+        owner: devops
+        group: devops
+        recurse: yes
+
+    - name: Create nopCommerce systemd service
+      copy:
+        dest: /etc/systemd/system/nopCommerce.service
+        content: |
+          [Unit]
+          Description=Example nopCommerce app running on Xubuntu
+
+          [Service]
+          WorkingDirectory=/var/nopCommerce
+          ExecStart=/usr/bin/dotnet /var/nopCommerce/Nop.Web.dll --urls "http://0.0.0.0:5000"
+          Restart=always
+          RestartSec=10
+          KillSignal=SIGINT
+          SyslogIdentifier=nopCommerce-example
+          User=devops
+          Environment=ASPNETCORE_ENVIRONMENT=Production
+          Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start the nopCommerce service
+      systemd:
+        name: nopCommerce
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: Restart SSH
+      service:
+        name: ssh
+        state: restarted

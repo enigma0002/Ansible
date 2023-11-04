@@ -1,6 +1,6 @@
 ---
 - name: Configure MySQL Server
-  hosts: nopserver
+  hosts: dbserver
   become: yes
   tasks:
     - name: Update APT package cache
@@ -44,11 +44,4 @@
         password: nop12345
         priv: "*.*:ALL,GRANT"
 
-    - name: Flush MySQL Privileges
-      mysql_db:
-        login_user: nop
-        login_password: nop12345
-        name: "*.*"
-        state: query
-        query: FLUSH PRIVILEGES
 
