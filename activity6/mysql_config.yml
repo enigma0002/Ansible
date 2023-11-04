@@ -46,7 +46,7 @@
 
     - name: Flush MySQL Privileges
       mysql_db:
-        login_user: devops
-        login_password: devops
+        login_user: nop
+        login_password: nop12345
         name: "*.*"
         state: flush_privileges
