@@ -26,6 +26,7 @@
 
     - name: Reload Systemd
       systemd:
+        name: dummy_service
         state: reloaded
         daemon_reload: yes
 
